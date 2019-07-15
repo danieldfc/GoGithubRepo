@@ -4,13 +4,13 @@ export const Form = styled.form`
   margin-top: 30px;
   display: flex;
   flex-direction: row;
-
   input {
     flex: 1;
-    border: 1px solid #eee;
+    border: 1px solid ${props => (props.error ? '#ff0000' : '#eee')};
     padding: 10px 15px;
     border-radius: 4px;
     font-size: 16px;
+    transition: border 0.25s ease-out;
   }
 `;
 
