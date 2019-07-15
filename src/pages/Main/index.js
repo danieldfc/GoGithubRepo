@@ -47,26 +47,26 @@ export default class Main extends Component {
 
       if (!newRepo) throw new Error('Você precisa informar o repositório');
 
-      const available = repositories.find(
-        repository => repository.name === newRepo
-      );
-
-      if (available)
-        throw new Error('Não é possível adicionar esse repositório');
-
       const response = await api.get(`/repos/${newRepo}`);
 
       const data = {
         name: response.data.full_name,
       };
 
+      const available = repositories.find(
+        repository => repository.name === data.name
+      );
+
+      if (available) throw new Error('Repositório duplicado');
+
       this.setState({
         repositories: [...repositories, data],
         newRepo: '',
-        loading: false,
       });
     } catch (error) {
-      this.setState({ error: true });
+      this.setState({ error: true, newRepo: '' });
+    } finally {
+      this.setState({ loading: false });
     }
   };
 
@@ -88,7 +88,7 @@ export default class Main extends Component {
             onChange={this.handleInputChange}
           />
 
-          <SubmitButton loading={loading}>
+          <SubmitButton loading={loading ? 1 : 0}>
             {loading ? (
               <FaSpinner color="#FFF" size={14} />
             ) : (
