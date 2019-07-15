@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 
 import Container from '../../components/Container';
-import { Loading, Owner, IssueList } from './styles';
+import { Loading, Owner, IssueList, Pagination, IssueFilter } from './styles';
 
 export default class Repository extends Component {
   static propTypes = {
@@ -20,6 +20,14 @@ export default class Repository extends Component {
     repository: {},
     issues: [],
     loading: true,
+    pagination: true,
+    page: 1,
+    filters: [
+      { state: 'all', active: true },
+      { state: 'open', active: false },
+      { state: 'closed', active: false },
+    ],
+    filterIndex: 0,
   };
 
   async componentDidMount() {
@@ -44,8 +52,56 @@ export default class Repository extends Component {
     });
   }
 
+  handleFilterClick = async filterIndex => {
+    await this.setState({ filterIndex });
+
+    this.loaderIssues();
+  };
+
+  handlePagination = async result => {
+    const { page, issues, pagination } = this.state;
+
+    if (!issues) {
+      this.setState({
+        pagination: false,
+      });
+    }
+
+    if (pagination) {
+      await this.setState({
+        page: result === 'prev' ? page - 1 : page + 1,
+      });
+      this.loaderIssues();
+    }
+  };
+
+  loaderIssues = async () => {
+    const { filters, filterIndex, page } = this.state;
+    const { match } = this.props;
+
+    const repoName = decodeURIComponent(match.params.repository);
+
+    const response = await api.get(`/repos/${repoName}/issues`, {
+      params: {
+        state: filters[filterIndex].state,
+        per_page: 5,
+        page,
+      },
+    });
+
+    this.setState({ issues: response.data, pagination: true });
+  };
+
   render() {
-    const { repository, issues, loading } = this.state;
+    const {
+      repository,
+      issues,
+      loading,
+      page,
+      filters,
+      filterIndex,
+      pagination,
+    } = this.state;
 
     if (loading) {
       return <Loading>Carregando</Loading>;
@@ -61,6 +117,17 @@ export default class Repository extends Component {
         </Owner>
 
         <IssueList>
+          <IssueFilter active={filterIndex}>
+            {filters.map((filter, index) => (
+              <button
+                type="button"
+                key={filter.label}
+                onClick={() => this.handleFilterClick(index)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </IssueFilter>
           {issues.map(issue => (
             <li key={String(issue.id)}>
               <img src={issue.user.avatar_url} alt={issue.user.login} />
@@ -76,6 +143,24 @@ export default class Repository extends Component {
             </li>
           ))}
         </IssueList>
+
+        <Pagination>
+          <button
+            type="button"
+            disabled={page < 2}
+            onClick={() => this.handlePagination('prev')}
+          >
+            Prev
+          </button>
+          <span>Page {page}</span>
+          <button
+            type="button"
+            enabled={pagination ? 1 : 0}
+            onClick={() => this.handlePagination('next')}
+          >
+            Next
+          </button>
+        </Pagination>
       </Container>
     );
   }
