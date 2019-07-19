@@ -102,6 +102,60 @@ export const IssueList = styled.ul`
   }
 `;
 
-export const Pagination = styled.div``;
+export const IssueFilter = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-export const IssueFilter = styled.div``;
+  button {
+    width: 180px;
+    height: 45px;
+    color: #fff;
+    background: #7159c1;
+    border: 0;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 600;
+
+    &:nth-child(${props => props.active + 1}) {
+      background: #777;
+      color: #fff;
+    }
+
+    &:hover {
+      transition: all 0.5s ease;
+      border: 1px solid #7159c1;
+      background: #fff;
+      color: #7159c1;
+    }
+  }
+`;
+
+export const Pagination = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  margin: 0 200px;
+
+  button {
+    background: #7159c1;
+    border-radius: 4px;
+    padding: 10px;
+    border: 0;
+    color: #fff;
+    &:hover {
+      transition: all 0.5s inherit;
+      border: 1px solid #7159c1;
+      padding: 9px;
+      transition: all 0.5s ease;
+      background: #fff;
+      color: #7159c1;
+    }
+  }
+
+  span {
+    font-size: 14px;
+    font-weight: 600;
+  }
+`;

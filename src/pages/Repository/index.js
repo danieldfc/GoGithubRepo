@@ -20,12 +20,11 @@ export default class Repository extends Component {
     repository: {},
     issues: [],
     loading: true,
-    pagination: true,
     page: 1,
     filters: [
-      { state: 'all', active: true },
-      { state: 'open', active: false },
-      { state: 'closed', active: false },
+      { state: 'all', label: 'All', active: true },
+      { state: 'open', label: 'Open', active: false },
+      { state: 'closed', label: 'Closed', active: false },
     ],
     filterIndex: 0,
   };
@@ -40,7 +39,7 @@ export default class Repository extends Component {
       api.get(`/repos/${repoName}/issues`, {
         params: {
           state: 'open',
-          per_page: 5,
+          per_page: 30,
         },
       }),
     ]);
@@ -59,20 +58,12 @@ export default class Repository extends Component {
   };
 
   handlePagination = async result => {
-    const { page, issues, pagination } = this.state;
+    const { page } = this.state;
 
-    if (!issues) {
-      this.setState({
-        pagination: false,
-      });
-    }
-
-    if (pagination) {
-      await this.setState({
-        page: result === 'prev' ? page - 1 : page + 1,
-      });
-      this.loaderIssues();
-    }
+    await this.setState({
+      page: result === 'prev' ? page - 1 : page + 1,
+    });
+    this.loaderIssues();
   };
 
   loaderIssues = async () => {
@@ -84,12 +75,16 @@ export default class Repository extends Component {
     const response = await api.get(`/repos/${repoName}/issues`, {
       params: {
         state: filters[filterIndex].state,
-        per_page: 5,
+        per_page: 30,
         page,
       },
     });
 
-    this.setState({ issues: response.data, pagination: true });
+    if (!(response.headers.link && response.headers.link.includes('next'))) {
+      return new Error('Not permited the next page');
+    }
+
+    return this.setState({ issues: response.data });
   };
 
   render() {
@@ -100,7 +95,6 @@ export default class Repository extends Component {
       page,
       filters,
       filterIndex,
-      pagination,
     } = this.state;
 
     if (loading) {
@@ -153,11 +147,7 @@ export default class Repository extends Component {
             Prev
           </button>
           <span>Page {page}</span>
-          <button
-            type="button"
-            enabled={pagination ? 1 : 0}
-            onClick={() => this.handlePagination('next')}
-          >
+          <button type="button" onClick={() => this.handlePagination('next')}>
             Next
           </button>
         </Pagination>
